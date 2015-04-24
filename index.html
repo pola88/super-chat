@@ -1,5 +1,6 @@
 <html>
   <head>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <style>
       body {
         font-family: "Helvetica Neue", helvetica, arial;
@@ -17,8 +18,7 @@
       }
 
       .allMessages{
-        width: 200px;
-        max-height: 400px;
+        height: 400px;
         overflow: scroll;
       }
 
@@ -31,15 +31,99 @@
         padding-left: 5px;
         display: inline-block;
       }
+
+      .chat-container {
+        display: none;
+      }
+
+      .allUsers {
+        float: right;
+      }
     </style>
 
     <script>
-      var host = location.origin.replace(/^http/, 'ws')
-      var ws = new WebSocket(host);
-      ws.onmessage = function (event) {
-        var data = JSON.parse(event.data);
+      var ws;
+      var user;
 
-        var allMessages = document.querySelector('.allMessages');
+      function start() {
+        var host = location.origin.replace(/^http/, 'ws')
+        ws = new WebSocket(host);
+
+        ws.onmessage = function (event) {
+          var data = JSON.parse(event.data);
+
+          switch(data.action) {
+            case 'new':
+              addNewUser(data.data);
+              break;
+            case 'message':
+              writeNewMessage(data.data);
+              break;
+            case 'delete':
+              deleteUser(data.data);
+              break;
+            default:
+              console.log('Invalid action');
+          }
+        };
+
+        ws.onopen = function() {
+          var chatContainer = document.getElementById('chat-container');
+          chatContainer.style.display = 'block';
+
+          var login = document.getElementById('login');
+          login.style.display = 'none';
+
+          var name = document.getElementById('name').value;
+          user = name;
+          document.getElementById("showUserName").innerHTML = "Username: " + name;
+
+          var data = {
+            action: 'new',
+            data: {
+              userName: name
+            }
+          }
+
+          ws.send(JSON.stringify(data));
+        }
+
+        return false;
+      }
+
+      function deleteUser(data) {
+        var userElement = document.getElementsByClassName(data.userName)[0];
+        userElement.parentNode.removeChild(userElement);
+
+        var allMessages = document.getElementById('allMessages');
+
+        var newUserMessage = document.createElement('p');
+        newUserMessage.className = 'bg-danger';
+        newUserMessage.innerHTML = 'User ' + data.userName + ' disconnected';
+
+        allMessages.appendChild(newUserMessage);
+      }
+
+      function addNewUser(data) {
+        var userList = document.getElementById('userList');
+        // users.push(data.userName);
+        var li = document.createElement('li');
+        li.className = data.userName;
+        li.innerHTML = data.userName;
+
+        userList.appendChild(li);
+
+        var allMessages = document.getElementById('allMessages');
+
+        var newUserMessage = document.createElement('p');
+        newUserMessage.className = 'bg-success';
+        newUserMessage.innerHTML = 'User ' + data.userName + ' connected';
+
+        allMessages.appendChild(newUserMessage);
+      }
+
+      function writeNewMessage(data) {
+        var allMessages = document.getElementById('allMessages');
         var div = document.createElement('div');
 
         var nameDiv = document.createElement('div');
@@ -54,15 +138,23 @@
         div.appendChild(txtDiv);
 
         allMessages.appendChild(div);
-      };
+      }
 
       function sendMsg() {
+        if(!ws) {
+          return;
+        }
+
         var message = document.getElementById('message').value;
         var name = document.getElementById('name').value;
         var data = {
-          name: name,
-          message: message
+          action: 'message',
+          data: {
+            name: name,
+            message: message
+          }
         }
+
         ws.send(JSON.stringify(data));
         document.getElementById('message').value = '';
         return false;
@@ -71,12 +163,39 @@
     </script>
   </head>
   <body>
-    <label>Name</label>
-    <input type='text' id="name"></input>
-    <div id="allMessages" class="allMessages"></div>
-    <form onsubmit="sendMsg();return false;">
-      <input type='text' id="message"></input>
-      <input type="submit" id="sendMessage" value="Send"></input>
-    </form>
+    <div class="container-fluid">
+      <div class="row" id="login">
+        <div class="col-xs-6 col-md-4 col-md-offset-3">
+          <form onsubmit="start();return false;">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" class="form-control" id="name" placeholder="Enter your Nickname">
+            </div>
+            <button type="submit" class="btn btn-default pull-right btn-primary">start</button>
+          </form>
+        </div>
+      </div>
+      <div id="chat-container" class="chat-container">
+        <label id="showUserName"></label>
+        <div class="row">
+          <div class="col-xs-6 col-md-4 col-md-offset-3">
+            <h3>Messages:</h3>
+            <div class="panel panel-default">
+              <div id="allMessages" class="allMessages panel-body"></div>
+            </div>
+            <form onsubmit="sendMsg();return false;">
+              <div class="form-group">
+                <label for="exampleInputEmail1">Message:</label>
+                <input type="text" class="form-control" id="message" placeholder="Say something">
+              </div>
+              <button type="submit" id="sendMessage" class="btn btn-default pull-right btn-primary">Send</button>
+            </form>
+          </div>
+          <div class="col-xs-6 col-md-2">
+            <div id="allUsers" class="allUsers"><h2>Users</h2><ul id='userList'></ul></div>
+          </div>
+      </div>
+      </div>
+    </div>
   </body>
 </html>
