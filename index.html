@@ -81,6 +81,7 @@
           var data = {
             action: 'new',
             data: {
+              token: token(),
               userName: name
             }
           }
@@ -95,38 +96,33 @@
         var userElement = document.getElementsByClassName(data.userName)[0];
         userElement.parentNode.removeChild(userElement);
 
-        var allMessages = document.getElementById('allMessages');
+        var removeUserMessage = document.createElement('p');
+        removeUserMessage.className = 'bg-danger';
+        removeUserMessage.innerHTML = 'User ' + data.userName + ' disconnected';
 
-        var newUserMessage = document.createElement('p');
-        newUserMessage.className = 'bg-danger';
-        newUserMessage.innerHTML = 'User ' + data.userName + ' disconnected';
-
-        allMessages.appendChild(newUserMessage);
+        addElementToMessages(removeUserMessage);
       }
 
       function addNewUser(data) {
         var userList = document.getElementById('userList');
-        // users.push(data.userName);
         var li = document.createElement('li');
+
         li.className = data.userName;
         li.innerHTML = data.userName;
 
         userList.appendChild(li);
 
-        var allMessages = document.getElementById('allMessages');
-
         var newUserMessage = document.createElement('p');
         newUserMessage.className = 'bg-success';
         newUserMessage.innerHTML = 'User ' + data.userName + ' connected';
 
-        allMessages.appendChild(newUserMessage);
+        addElementToMessages(newUserMessage);
       }
 
       function writeNewMessage(data) {
-        var allMessages = document.getElementById('allMessages');
         var div = document.createElement('div');
-
         var nameDiv = document.createElement('div');
+
         nameDiv.className = 'userName';
         nameDiv.innerHTML = data.name + ':';
 
@@ -137,7 +133,7 @@
         div.appendChild(nameDiv);
         div.appendChild(txtDiv);
 
-        allMessages.appendChild(div);
+        addElementToMessages(div);
       }
 
       function sendMsg() {
@@ -158,6 +154,17 @@
         ws.send(JSON.stringify(data));
         document.getElementById('message').value = '';
         return false;
+      }
+
+      function addElementToMessages(element) {
+        var allMessages = document.getElementById('allMessages');
+
+        allMessages.appendChild(element);
+        allMessages.scrollTop = allMessages.scrollHeight;
+      }
+
+      function token() {
+        return Math.random().toString(36).substr(2); // remove `0.`
       }
 
     </script>
