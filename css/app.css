@@ -1,0 +1,45 @@
+body {
+  font-family: "Helvetica Neue", helvetica, arial;
+  padding: 15px;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul li {
+  line-height: 1.4;
+}
+
+.allMessages{
+  height: 400px;
+  overflow: scroll;
+}
+
+.userName {
+  font-weight: bold;
+  display: inline-block;
+}
+
+.message {
+  padding-left: 5px;
+  display: inline-block;
+}
+
+.chat-container {
+  display: none;
+}
+
+.allUsers {
+  float: right;
+}
+
+.missingMessages {
+  height: 5px;
+  width: 100%;
+  border-bottom: solid 1px gray;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
