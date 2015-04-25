@@ -46,6 +46,10 @@
       var user;
 
       function start() {
+        if(ws) {
+          return;
+        }
+
         var host = location.origin.replace(/^http/, 'ws')
         ws = new WebSocket(host);
 
@@ -138,10 +142,6 @@
       }
 
       function sendMsg() {
-        if(!ws) {
-          return;
-        }
-
         var message = document.getElementById('message').value;
         var name = document.getElementById('name').value;
         var data = {
@@ -175,6 +175,10 @@
       }
 
       function sendData(data) {
+        if(!ws) {
+          return;
+        }
+
         ws.send(JSON.stringify(data));
       }
 
