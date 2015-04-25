@@ -17,6 +17,7 @@ console.log("websocket server created")
 var clients = [];
 
 wss.on("connection", function(ws) {
+  var currentUserToken;
   console.log("websocket connection open");
 
   clients.forEach(function(client) {
@@ -31,16 +32,17 @@ wss.on("connection", function(ws) {
     if(data.action === 'new') {
       ws.createUser = msg;
       ws.userToken = data.data.token;
+      currentUserToken = ws.userToken;
     } else if (data.action === 'ping'){
       console.log('ping from: ' + ws.userToken)
       return;
     }
 
-    sendToAllUsers(msg);
+    sendToAllUsers(msg, currentUserToken);
   });
 
   ws.on("close", function(evt) {
-    var currentUserToken = ws.userToken;
+    // var currentUserToken = ws.userToken;
     var removeIndex;
 
     clients.forEach(function(client, index) {
@@ -55,14 +57,15 @@ wss.on("connection", function(ws) {
 
     data.action = 'delete';
 
-    sendToAllUsers(JSON.stringify(data));
+    sendToAllUsers(JSON.stringify(data), currentUserToken);
     console.log("websocket connection close for " + currentUserToken);
   });
 });
 
 
-function sendToAllUsers (msg) {
+function sendToAllUsers (msg, userToken) {
   clients.forEach(function(client) {
-    client.send(msg, function() {});
+    if(client.userToken !== userToken)
+      client.send(msg, function() {});
   });
 }

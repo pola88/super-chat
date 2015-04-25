@@ -1,5 +1,6 @@
 <html>
   <head>
+    <title>Saxy-chat</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <style>
       body {
@@ -44,6 +45,7 @@
     <script>
       var ws;
       var user;
+      var userToken;
 
       function start() {
         if(ws) {
@@ -56,6 +58,8 @@
         ws.onmessage = function (event) {
           var data = JSON.parse(event.data);
 
+          titlenotifier.add();
+          console.log(data);
           switch(data.action) {
             case 'new':
               addNewUser(data.data);
@@ -82,16 +86,19 @@
           user = name;
           document.getElementById("showUserName").innerHTML = "Username: " + name;
 
+          userToken = token();
+
           var data = {
             action: 'new',
             data: {
-              token: token(),
+              token: userToken,
               userName: name
             }
           }
 
           sendData(data);
           ping();
+          addNewUser(data.data);
         }
 
         return false;
@@ -117,6 +124,10 @@
 
         userList.appendChild(li);
 
+        if(data.token === userToken) {
+          return;
+        }
+        
         var newUserMessage = document.createElement('p');
         newUserMessage.className = 'bg-success';
         newUserMessage.innerHTML = 'User ' + data.userName + ' connected';
@@ -143,16 +154,17 @@
 
       function sendMsg() {
         var message = document.getElementById('message').value;
-        var name = document.getElementById('name').value;
+
         var data = {
           action: 'message',
           data: {
-            name: name,
+            name: user,
             message: message
           }
         }
         sendData(data);
         document.getElementById('message').value = '';
+        writeNewMessage(data.data);
         return false;
       }
 
@@ -219,5 +231,21 @@
       </div>
       </div>
     </div>
+    <script src="/js/title_notifier.js"></script>
+    <script>
+      (function() {
+        document.getElementsByTagName('body')[0].onfocus = function() {
+          titlenotifier.reset();
+        }
+
+        document.getElementById('message').onfocus = function() {
+          titlenotifier.reset();
+        }
+
+        document.getElementById('allMessages').onfocus = function() {
+          titlenotifier.reset();
+        }
+      })();
+    </script>
   </body>
 </html>
