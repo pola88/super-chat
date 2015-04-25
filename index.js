@@ -15,6 +15,7 @@ var wss = new WebSocketServer({server: server})
 console.log("websocket server created")
 
 var clients = [];
+var latestMessages = [];
 
 wss.on("connection", function(ws) {
   var currentUserToken;
@@ -26,6 +27,10 @@ wss.on("connection", function(ws) {
 
   clients.push(ws);
 
+  latestMessages.forEach(function(msg) {
+    ws.send(msg);
+  });
+
   ws.on('message', function(msg) {
     var data = JSON.parse(msg);
 
@@ -36,13 +41,14 @@ wss.on("connection", function(ws) {
     } else if (data.action === 'ping'){
       console.log('ping from: ' + ws.userToken)
       return;
+    } else {
+      addLastMessage(msg);
     }
 
     sendToAllUsers(msg, currentUserToken);
   });
 
   ws.on("close", function(evt) {
-    // var currentUserToken = ws.userToken;
     var removeIndex;
 
     clients.forEach(function(client, index) {
@@ -68,4 +74,12 @@ function sendToAllUsers (msg, userToken) {
     if(client.userToken !== userToken)
       client.send(msg, function() {});
   });
+}
+
+function addLastMessage(msg) {
+  if(latestMessages.length >= 10) {
+    latestMessages.splice(0,1);
+  }
+
+  latestMessages.push(msg);
 }
