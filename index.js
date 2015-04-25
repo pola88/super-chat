@@ -17,11 +17,10 @@ console.log("websocket server created")
 var clients = [];
 
 wss.on("connection", function(ws) {
-  // var current_user;
+  console.log("websocket connection open");
 
-  console.log("websocket connection open")
   clients.forEach(function(client) {
-    ws.send(client.user);
+    ws.send(client.createUser);
   });
 
   clients.push(ws);
@@ -29,37 +28,36 @@ wss.on("connection", function(ws) {
   ws.on('message', function(msg) {
     var data = JSON.parse(msg);
 
-    sendToAllUsers(msg);
-
     if(data.action === 'new') {
-      ws.user = msg;
-    } else if(data.action === 'delete') {
-      console.log(data.userName);
+      ws.createUser = msg;
+      ws.userToken = data.data.token;
+    } else if (data.action === 'ping'){
+      console.log('ping from: ' + ws.userToken)
+      return;
     }
 
+    sendToAllUsers(msg);
   });
 
   ws.on("close", function(evt) {
-    var current_user = ws.user;
+    var currentUserToken = ws.userToken;
     var removeIndex;
 
     clients.forEach(function(client, index) {
-      if(client.user === current_user) {
+      if(client.userToken === currentUserToken) {
         removeIndex = index;
         return;
       }
     });
 
     clients.splice(removeIndex,1);
-    var data = JSON.parse(current_user);
+    var data = JSON.parse(ws.createUser);
 
     data.action = 'delete';
 
     sendToAllUsers(JSON.stringify(data));
-    // console.log(current_user);
-    console.log("websocket connection close")
-    // clearInterval(id)
-  })
+    console.log("websocket connection close for " + currentUserToken);
+  });
 });
 
 

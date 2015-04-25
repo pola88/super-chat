@@ -86,7 +86,8 @@
             }
           }
 
-          ws.send(JSON.stringify(data));
+          sendData(data);
+          ping();
         }
 
         return false;
@@ -150,8 +151,7 @@
             message: message
           }
         }
-
-        ws.send(JSON.stringify(data));
+        sendData(data);
         document.getElementById('message').value = '';
         return false;
       }
@@ -165,6 +165,17 @@
 
       function token() {
         return Math.random().toString(36).substr(2); // remove `0.`
+      }
+
+      function ping() {
+        setTimeout( function() {
+          sendData({action: 'ping'});
+          ping();
+        }, 30000);
+      }
+
+      function sendData(data) {
+        ws.send(JSON.stringify(data));
       }
 
     </script>
